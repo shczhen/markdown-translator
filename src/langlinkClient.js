@@ -5,17 +5,17 @@ const LANGLINK_HEADERS = {
   "x-langlink-user": process.env.LANGLINK_USER,
 };
 
-const GPT35_APP_ID = "aa0b44bc-3306-427b-9349-27d33b53e255";
+const GPT35_APP_ID = "cdf0b3df-2a86-4150-8805-f5d904ac704a";
 const OUTPUT_NODE_ID = "uXt40e3y1KhhHEKW-gmSN";
 const RERUN_TIME = 3;
 const RETRY_INTERVAL = 5000;
 const RETRY_TIME = 12;
 
-export const executeLangLinkTranslator = (input) => {
+export const executeLangLinkTranslator = (input, glossary) => {
   return new Promise((resolve, reject) => {
     const rerunLoop = async (rerunTime = 0) => {
       try {
-        const result = await runLangLinkTranslator(input);
+        const result = await runLangLinkTranslator(input, glossary);
         resolve(result);
       } catch {
         if (rerunTime < RERUN_TIME) {
@@ -29,12 +29,14 @@ export const executeLangLinkTranslator = (input) => {
   });
 };
 
-const runLangLinkTranslator = async (input) => {
+const runLangLinkTranslator = async (input, glossary) => {
   const res = await fetch(
     `https://langlink.pingcap.net/langlink-api/applications/${GPT35_APP_ID}/async`,
     {
       method: "POST",
-      body: JSON.stringify({ input }),
+      body: JSON.stringify({
+        input: { content: input, glossary: JSON.stringify(glossary) },
+      }),
       headers: LANGLINK_HEADERS,
     }
   );
