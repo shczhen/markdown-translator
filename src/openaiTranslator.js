@@ -17,7 +17,7 @@ export const translateMDFile = async (filePath, glossaryMatcher) => {
   const glossary = glossaryMatcher(content);
 
   const headings = extractHeadings(content);
-  const contentSegments = contentSplit(content, "heading")
+  const contentSegments = contentSplit(content)
     .map((seg) =>
       seg.skip
         ? seg
@@ -73,18 +73,66 @@ const TIKTOKEN_ENCODING = "cl100k_base";
 
 const createSegment = (content, skip = false) => ({ content, skip });
 const skipTypes = ["code"];
+const splitBy = "heading";
 
-const contentSplit = (content, by) => {
+const willSegmentReachLimit = (segment, newChildren) => {
+  const enc = get_encoding(TIKTOKEN_ENCODING);
+  const tempSegment = createNewRoot();
+  tempSegment.children = [...segment.children, ...newChildren];
+  const tempSegmentContent = toMarkdownContent(tempSegment);
+  const tempNumTokens = enc.encode(tempSegmentContent).length;
+  return tempNumTokens > MAX_TOKEN;
+};
+
+/**
+ * 1. Split by heading as segment
+ * 2. Re-join segments if under limit
+ * 3.
+ */
+const contentSplit = (content) => {
   const enc = get_encoding(TIKTOKEN_ENCODING);
   const numTokens = enc.encode(content).length;
   if (numTokens < MAX_TOKEN) {
     return [createSegment(content)];
   }
 
+  // group by node type
   const root = fromMarkdownContent(content);
-  const segments = [];
+  // { skip: boolean; nodes: Content[] }[]
+  const nodeGroup = [];
+  // Content[]
+  let nodes = [];
+
+  root.children.forEach((node) => {
+    if (node.type === splitBy && !!nodes.length) {
+      nodeGroup.push({ skip: false, nodes });
+      nodes = [node];
+      return;
+    }
+
+    if (skipTypes.includes(node.type)) {
+      if (!!nodes.length) {
+        nodeGroup.push({ skip: false, nodes });
+      }
+      nodeGroup.push({ skip: true, nodes: [node] });
+      nodes = [];
+      return;
+    }
+
+    nodes.push(node);
+  });
+  if (!!nodes.length) {
+    nodeGroup.push({ skip: false, nodes });
+  }
+
+  // re-join content
+  const output = [];
   let segment = createNewRoot();
-  const pushSegmentContent = () => {
+  const pushSegmentContentToOutput = () => {
+    if (!segment.children.length) {
+      return;
+    }
+
     const segmentContent = toMarkdownContent(segment);
     const numTokens = enc.encode(segmentContent).length;
     if (numTokens > MAX_TOKEN) {
@@ -94,42 +142,32 @@ const contentSplit = (content, by) => {
       );
     }
 
-    segments.push(createSegment(segmentContent, numTokens > MAX_TOKEN));
+    output.push(createSegment(segmentContent, numTokens > MAX_TOKEN));
     segment.children = [];
   };
-  root.children.forEach((node) => {
-    if (skipTypes.includes(node.type)) {
-      pushSegmentContent();
-      // insert skip node into segments
+
+  nodeGroup.forEach((g) => {
+    if (g.skip) {
+      pushSegmentContentToOutput();
+      // insert skip node into output
       const newRoot = createNewRoot();
-      newRoot.children.push(node);
-      segments.push(createSegment(toMarkdownContent(newRoot), true));
+      newRoot.children = g.nodes;
+      output.push(createSegment(toMarkdownContent(newRoot), true));
       return;
     }
 
-    const tempSegment = createNewRoot();
-    tempSegment.children = [...segment.children, node];
-    const tempSegmentContent = toMarkdownContent(tempSegment);
-    const tempNumTokens = enc.encode(tempSegmentContent).length;
-    const willReachLimit = tempNumTokens > MAX_TOKEN;
-
-    if (
-      (node.type === by && !!segment.children.length && willReachLimit) ||
-      willReachLimit
-    ) {
-      pushSegmentContent();
-      segment.children.push(node);
-      return;
+    const willReachLimit = willSegmentReachLimit(segment, g.nodes);
+    if (willReachLimit) {
+      pushSegmentContentToOutput();
     }
 
-    segment.children.push(node);
+    segment.children.push(...g.nodes);
   });
-
   if (!!segment.children.length) {
-    pushSegmentContent();
+    pushSegmentContentToOutput();
   }
 
-  return segments;
+  return output;
 };
 
 const extractHeadings = (content) => {
