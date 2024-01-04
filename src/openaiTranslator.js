@@ -64,6 +64,7 @@ const toMarkdownContent = (astNode) =>
   toMarkdown(astNode, {
     bullet: "-",
     listItemIndent: "one",
+    fences: true,
     extensions: [gfmToMarkdown()],
   });
 
