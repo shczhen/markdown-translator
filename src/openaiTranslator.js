@@ -68,12 +68,12 @@ const toMarkdownContent = (astNode) =>
     extensions: [gfmToMarkdown()],
   });
 
-const MAX_TOKEN = 1024;
+const MAX_TOKEN = 2048;
 const TIKTOKEN_ENCODING = "cl100k_base";
 
 const createSegment = (content, skip = false) => ({ content, skip });
 const skipTypes = ["code"];
-const splitBy = "heading";
+const splitBy = ["heading", "list"];
 
 const willSegmentReachLimit = (segment, newChildren) => {
   const enc = get_encoding(TIKTOKEN_ENCODING);
@@ -87,15 +87,15 @@ const willSegmentReachLimit = (segment, newChildren) => {
 /**
  * 1. Split by heading as segment
  * 2. Re-join segments if under limit
- * 3.
  */
-const contentSplit = (content) => {
+const contentSplit = (content, by = 0) => {
   const enc = get_encoding(TIKTOKEN_ENCODING);
   const numTokens = enc.encode(content).length;
   if (numTokens < MAX_TOKEN) {
     return [createSegment(content)];
   }
 
+  const splitToken = splitBy[by];
   // group by node type
   const root = fromMarkdownContent(content);
   // { skip: boolean; nodes: Content[] }[]
@@ -104,7 +104,7 @@ const contentSplit = (content) => {
   let nodes = [];
 
   root.children.forEach((node) => {
-    if (node.type === splitBy && !!nodes.length) {
+    if ((node.type === splitToken || !splitToken) && !!nodes.length) {
       nodeGroup.push({ skip: false, nodes });
       nodes = [node];
       return;
@@ -136,10 +136,16 @@ const contentSplit = (content) => {
     const segmentContent = toMarkdownContent(segment);
     const numTokens = enc.encode(segmentContent).length;
     if (numTokens > MAX_TOKEN) {
-      console.log(`Too large paragraph:\n${segmentContent.slice(0, 100)}...`);
-      throw new Error(
-        `Too large paragraph:\n${segmentContent.slice(0, 100)}...`
-      );
+      if (!splitToken) {
+        console.log(`Too large paragraph:\n${segmentContent.slice(0, 100)}...`);
+        // throw new Error(
+        //   `Too large paragraph:\n${segmentContent.slice(0, 100)}...`
+        // );
+      } else {
+        output.push(...contentSplit(segmentContent, ++by));
+        segment.children = [];
+        return;
+      }
     }
 
     output.push(createSegment(segmentContent, numTokens > MAX_TOKEN));
