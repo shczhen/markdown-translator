@@ -81,6 +81,8 @@ const willSegmentReachLimit = (segment, newChildren) => {
   tempSegment.children = [...segment.children, ...newChildren];
   const tempSegmentContent = toMarkdownContent(tempSegment);
   const tempNumTokens = enc.encode(tempSegmentContent).length;
+  enc.free();
+
   return tempNumTokens > MAX_TOKEN;
 };
 
@@ -91,6 +93,8 @@ const willSegmentReachLimit = (segment, newChildren) => {
 const contentSplit = (content, by = 0) => {
   const enc = get_encoding(TIKTOKEN_ENCODING);
   const numTokens = enc.encode(content).length;
+  enc.free();
+
   if (numTokens < MAX_TOKEN) {
     return [createSegment(content)];
   }
