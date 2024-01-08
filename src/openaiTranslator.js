@@ -138,7 +138,9 @@ const contentSplit = (content, by = 0) => {
     }
 
     const segmentContent = toMarkdownContent(segment);
+    const enc = get_encoding(TIKTOKEN_ENCODING);
     const numTokens = enc.encode(segmentContent).length;
+    enc.free();
     if (numTokens > MAX_TOKEN) {
       if (!splitToken) {
         console.log(`Too large paragraph:\n${segmentContent.slice(0, 100)}...`);
@@ -198,11 +200,18 @@ const concatHeadings = (content, headings) => {
 
   headings.forEach((heading, index) => {
     const contentHeading = contentHeadings[index];
-    if (contentHeading.depth !== heading.level) {
+    if (!contentHeading) {
       throw new Error(
-        `The wrong level has been matched. Heading level: ${heading.level}, text: ${heading.content}; Content Heading level: ${contentHeading.depth}, text: ${contentHeading.children[0].value}`
+        `Heading don't match, the heading of origin content is: ${heading.content}`
       );
     }
+
+    if (contentHeading.depth !== heading.level) {
+      throw new Error(
+        `The wrong level has been matched. Origin heading level: ${heading.level}, text: ${heading.content}; Translated Heading level: ${contentHeading.depth}, text: ${contentHeading.children[0].value}`
+      );
+    }
+
     contentHeading.children.push({
       type: "text",
       value: ` {#${heading.content}}`,
