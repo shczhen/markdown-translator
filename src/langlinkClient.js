@@ -5,7 +5,7 @@ const LANGLINK_HEADERS = {
   "x-langlink-user": process.env.LANGLINK_USER,
 };
 
-const GPT35_APP_ID = "bee21a00-2e88-408b-99f4-abec393548da";
+const GPT35_APP_ID = "1d7dda61-5a41-47c8-a0f1-63547a974214";
 const OUTPUT_NODE_ID = "uXt40e3y1KhhHEKW-gmSN";
 const RERUN_TIME = 3;
 const RETRY_INTERVAL = 5000;
@@ -16,7 +16,8 @@ export const executeLangLinkTranslator = (input, glossary) => {
     const rerunLoop = async (rerunTime = 0) => {
       try {
         const result = await runLangLinkTranslator(input, glossary);
-        resolve(result);
+        // # docs_translator is the content splitter in the langlink app's prompt
+        resolve(result.replace("# docs_translator\n", ""));
       } catch {
         if (rerunTime < RERUN_TIME) {
           rerunLoop(++rerunTime);

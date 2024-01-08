@@ -17,6 +17,7 @@ export const translateMDFile = async (filePath, glossaryMatcher) => {
   const glossary = glossaryMatcher(content);
 
   const headings = extractHeadings(content);
+  // console.log(headings);
   const contentSegments = contentSplit(content)
     .map((seg) =>
       seg.skip
@@ -37,6 +38,7 @@ export const translateMDFile = async (filePath, glossaryMatcher) => {
       return executeLangLinkTranslator(seg.content, glossary);
     })
   );
+  // console.log(dataArr);
   const data = dataArr.join("\n").trim();
   const result = concatHeadings(data, headings);
   const contentWithMeta = `${meta ? `${meta}\n` : ""}${result}`;
@@ -194,9 +196,17 @@ const extractHeadings = (content) => {
 
 const concatHeadings = (content, headings) => {
   const root = fromMarkdownContent(content);
+  // console.log(content);
   const contentHeadings = root.children.filter(
     (node) => node.type === "heading"
   );
+
+  // console.log(
+  //   contentHeadings.map((h) => ({
+  //     level: h.depth,
+  //     content: h.children[0].value,
+  //   }))
+  // );
 
   headings.forEach((heading, index) => {
     const contentHeading = contentHeadings[index];
