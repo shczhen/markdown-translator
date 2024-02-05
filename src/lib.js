@@ -166,7 +166,11 @@ const handleFrontMatter = async (yamlNode) => {
 
 const handleHTML = async (htmlNode) => {
   const HTMLStr = htmlNode.value;
-  if (!HTMLStr.includes(`<span translate="no">`)) {
+  if (
+    !HTMLStr.includes(`<span translate="no">`) ||
+    // GCP Glossary will be missing in the title content
+    !HTMLStr.includes('title="')
+  ) {
     const [output] = await translateSingleText(HTMLStr, "text/html");
     htmlNode.value = output;
   }
