@@ -88,8 +88,7 @@ export const handleAstNode = (node) => {
     case "html":
       return handleHTML(node);
     case "yaml":
-    // TODO: frontmatter
-    // return handleFrontMatter(node);
+      return handleFrontMatter(node);
     default:
       // console.log(node);
       break;
@@ -144,16 +143,16 @@ export const handleAstNode = (node) => {
 const handleFrontMatter = async (yamlNode) => {
   const originVal = yamlNode.value;
   const originValList = originVal.split("\n");
-  console.log(originValList);
   const result = [];
   for (let i = 0; i < originValList.length; i++) {
     const frontmatterItem = originValList[i];
     const keyName = frontmatterItem.split(":").shift();
-    if (keyName === "title") {
-      const itemVal = frontmatterItem.split("title:").pop();
-      const translatedVal = await translateSingleText(itemVal);
-      result.push(`title: ${translatedVal}`);
-    } else if (keyName === "summary") {
+    // if (keyName === "title") {
+    //   const itemVal = frontmatterItem.split("title:").pop();
+    //   const translatedVal = await translateSingleText(itemVal);
+    //   result.push(`title: ${translatedVal}`);
+    // } else if (keyName === "summary") {
+    if (keyName === "summary") {
       const itemVal = frontmatterItem.split("summary:").pop();
       const translatedVal = await translateSingleText(itemVal);
       result.push(`summary: ${translatedVal}`);
