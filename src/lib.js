@@ -156,6 +156,7 @@ const handleFrontMatter = async (yamlNode) => {
       const itemVal = frontmatterItem.split("summary:").pop();
       const translatedVal = await translateSingleText(itemVal);
       if (translatedVal) {
+        console.log(translatedVal);
         result.push(`summary: ${translatedVal.replace("`", "")}`);
       }
     } else {
