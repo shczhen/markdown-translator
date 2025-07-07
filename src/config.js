@@ -6,6 +6,7 @@ export const SKIP_FILES = [
   // "getting-started/README.md",
   // "tutorials/basic-example.md",
   // "docs/api-reference.md"
+  "TOC.md",
   "TOC-tidb-cloud.md",
 ];
 
