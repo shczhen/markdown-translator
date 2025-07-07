@@ -5,17 +5,16 @@ const LANGLINK_HEADERS = {
   "x-langlink-user": process.env.LANGLINK_USER,
 };
 
-const GPT35_APP_ID = "1d7dda61-5a41-47c8-a0f1-63547a974214";
 const OUTPUT_NODE_ID = "uXt40e3y1KhhHEKW-gmSN";
 const RERUN_TIME = 3;
 const RETRY_INTERVAL = 5000;
 const RETRY_TIME = 12;
 
-export const executeLangLinkTranslator = (input, glossary) => {
+export const executeLangLinkTranslator = (appId, input, glossary) => {
   return new Promise((resolve, reject) => {
     const rerunLoop = async (rerunTime = 0) => {
       try {
-        const result = await runLangLinkTranslator(input, glossary);
+        const result = await runLangLinkTranslator(appId, input, glossary);
         // # docs_translator is the content splitter in the langlink app's prompt
         resolve(result.replace("# docs_translator\n", ""));
       } catch {
@@ -30,9 +29,9 @@ export const executeLangLinkTranslator = (input, glossary) => {
   });
 };
 
-const runLangLinkTranslator = async (input, glossary) => {
+const runLangLinkTranslator = async (appId, input, glossary) => {
   const res = await fetch(
-    `https://langlink.pingcap.net/langlink-api/applications/${GPT35_APP_ID}/async`,
+    `https://langlink.pingcap.net/langlink-api/applications/${appId}/async`,
     {
       method: "POST",
       body: JSON.stringify({
@@ -44,7 +43,7 @@ const runLangLinkTranslator = async (input, glossary) => {
   const data = await res.json();
   const retryPromise = new Promise((resolve, reject) => {
     const getLangLinkResultLoop = async (retryTime = 0) => {
-      const result = await getLangLinkResult(data.id);
+      const result = await getLangLinkResult(appId, data.id);
       if (!result.length) {
         if (retryTime < RETRY_TIME) {
           setTimeout(() => {
@@ -64,9 +63,9 @@ const runLangLinkTranslator = async (input, glossary) => {
   return retryPromise;
 };
 
-const getLangLinkResult = async (id) => {
+const getLangLinkResult = async (appId, id) => {
   const res = await fetch(
-    `https://langlink.pingcap.net/langlink-api/applications/${GPT35_APP_ID}/debug/${id}`,
+    `https://langlink.pingcap.net/langlink-api/applications/${appId}/debug/${id}`,
     {
       method: "GET",
       headers: LANGLINK_HEADERS,

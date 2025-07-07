@@ -2,7 +2,8 @@ import * as fs from "fs";
 import "dotenv/config";
 
 import { getMdFileList } from "./lib.js";
-import { translateMDFile } from "./openaiTranslator.js";
+import { translateMDFile } from "./aiTranslatorLanglink.js";
+import { gcpTranslator } from "./gcpTranslator.js";
 import { createGlossaryMatcher } from "./glossary.js";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -23,18 +24,10 @@ const main = async () => {
     try {
       await translateMDFile(filePath, glossaryMatcher);
     } catch (e) {
-      // await gcpTranslator(filePath);
+      await gcpTranslator(filePath);
       console.error(e);
     }
   }
-
-  // await Promise.all(
-  //   srcList.map((filePath) => {
-  //     console.log(filePath);
-  //     replaceDeprecatedContent(filePath);
-  //     return translateSingleMdToJa(filePath);
-  //   })
-  // );
 };
 
 main();

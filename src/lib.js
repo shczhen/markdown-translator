@@ -23,6 +23,12 @@ import { gfmFromMarkdown, gfmToMarkdown } from "mdast-util-gfm";
 import { toMarkdown } from "mdast-util-to-markdown";
 
 import { translateSingleText } from "./gcpTranslate.js";
+import {
+  SKIP_FILES,
+  ENABLE_SKIP_FILES,
+  SKIP_PATTERNS,
+  ENABLE_SKIP_PATTERNS,
+} from "./config.js";
 
 const generateNoTranslateTag = (src) => {
   return `<span translate="no">{{B-NOTRANSLATE-${src}-NOTRANSLATE-E}}</span>`;
@@ -32,8 +38,64 @@ const getMds = (src) => {
   return glob.sync(src + "/**/*.md");
 };
 
+// 检查文件是否应该被跳过
+const shouldSkipFile = (filePath, prefix) => {
+  if (!ENABLE_SKIP_FILES && !ENABLE_SKIP_PATTERNS) {
+    return false;
+  }
+
+  // 获取相对于 prefix 目录的路径
+  const relativePath = path.relative(prefix, filePath);
+
+  // 检查精确文件路径匹配
+  if (ENABLE_SKIP_FILES && SKIP_FILES.includes(relativePath)) {
+    console.log(`跳过文件 (精确匹配): ${relativePath}`);
+    return true;
+  }
+
+  // 检查模式匹配
+  if (ENABLE_SKIP_PATTERNS) {
+    for (const pattern of SKIP_PATTERNS) {
+      // 简单的通配符匹配
+      const regexPattern = pattern
+        .replace(/\*\*/g, ".*") // ** 匹配任意路径
+        .replace(/\*/g, "[^/]*") // * 匹配文件名
+        .replace(/\./g, "\\."); // 转义点号
+      const regex = new RegExp(`^${regexPattern}$`);
+
+      if (regex.test(relativePath)) {
+        console.log(
+          `跳过文件 (模式匹配): ${relativePath} (匹配模式: ${pattern})`
+        );
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
 export const getMdFileList = (prefix) => {
-  return getMds(prefix);
+  const allFiles = getMds(prefix);
+
+  if (!ENABLE_SKIP_FILES && !ENABLE_SKIP_PATTERNS) {
+    return allFiles;
+  }
+
+  // 过滤掉需要跳过的文件
+  const filteredFiles = allFiles.filter(
+    (filePath) => !shouldSkipFile(filePath, prefix)
+  );
+
+  if (allFiles.length !== filteredFiles.length) {
+    console.log(
+      `总共找到 ${allFiles.length} 个文件，跳过 ${
+        allFiles.length - filteredFiles.length
+      } 个文件`
+    );
+  }
+
+  return filteredFiles;
 };
 
 export const writeFileSync = (destPath, fileContent) => {

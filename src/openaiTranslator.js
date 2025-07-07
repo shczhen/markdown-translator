@@ -9,6 +9,8 @@ import { get_encoding } from "tiktoken";
 import { executeLangLinkTranslator } from "./langlinkClient.js";
 import { writeFileSync } from "./lib.js";
 
+const GPT35_APP_ID = "1d7dda61-5a41-47c8-a0f1-63547a974214";
+
 const createNewRoot = () => ({ type: "root", children: [] });
 
 export const translateMDFile = async (filePath, glossaryMatcher) => {
@@ -35,7 +37,7 @@ export const translateMDFile = async (filePath, glossaryMatcher) => {
       if (seg.skip) {
         return Promise.resolve(seg.content);
       }
-      return executeLangLinkTranslator(seg.content, glossary);
+      return executeLangLinkTranslator(GPT35_APP_ID, seg.content, glossary);
     })
   );
   // console.log(dataArr);
