@@ -2,7 +2,7 @@ import * as fs from "fs";
 import "dotenv/config";
 
 import { getMdFileList } from "./lib.js";
-import { translateMDFile } from "./aiTranslatorLanglink.js";
+import { translateMDFile } from "./aiTranslatorZH.js";
 import { gcpTranslator } from "./gcpTranslator.js";
 import { createGlossaryMatcher } from "./glossary.js";
 
