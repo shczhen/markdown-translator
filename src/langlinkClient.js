@@ -8,7 +8,7 @@ const LANGLINK_HEADERS = {
 const OUTPUT_NODE_ID = "uXt40e3y1KhhHEKW-gmSN";
 const RERUN_TIME = 3;
 const RETRY_INTERVAL = 5000;
-const RETRY_TIME = 12;
+const RETRY_TIME = 60;
 
 export const executeLangLinkTranslator = (appId, input, glossary) => {
   return new Promise((resolve, reject) => {
