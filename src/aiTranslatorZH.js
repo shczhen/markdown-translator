@@ -7,7 +7,7 @@ import { executeLangLinkTranslator } from "./langlinkClient.js";
 const LANGLINK_APP_ID = "2c3cf5a4-9f4f-4ab1-aa3e-37c5da35a94f";
 
 // Token 限制配置
-const OUTPUT_TOKEN_LIMIT = 30000;
+const OUTPUT_TOKEN_LIMIT = 60000;
 const TIKTOKEN_ENCODING = "cl100k_base";
 
 // 英文到中文的token比例估算（通常中文token数约为英文的1.5-2倍）
