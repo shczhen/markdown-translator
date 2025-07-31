@@ -5,6 +5,7 @@ import { getMdFileList } from "./lib.js";
 import { translateMDFile } from "./aiTranslatorZH.js";
 import { gcpTranslator } from "./gcpTranslator.js";
 import { createGlossaryMatcher } from "./glossary.js";
+import { loadVariables, variablesReplace } from "./variables.js";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -17,9 +18,13 @@ const replaceDeprecatedContent = (path) => {
 const main = async () => {
   const srcList = getMdFileList("markdowns");
   const glossaryMatcher = await createGlossaryMatcher();
+  // Load variables from variables.json
+  const variables = loadVariables();
+  console.log("Loaded variables:", variables);
 
   for (let filePath of srcList) {
     console.log(filePath);
+    variablesReplace(variables, filePath);
     replaceDeprecatedContent(filePath);
     try {
       await translateMDFile(filePath, glossaryMatcher);
