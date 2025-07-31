@@ -21,6 +21,7 @@ import { visit } from "unist-util-visit";
 // } from "remark-comment-o";
 
 import { getMdFileList, writeFileSync, handleAstNode } from "./lib.js";
+import { loadVariables, variablesReplace } from "./variables.js";
 
 const pSum = {
   sum: 0,
@@ -116,8 +117,13 @@ const main = async () => {
   const srcList = getMdFileList("markdowns");
   // console.log(srcList);
 
+  // Load variables from variables.json
+  const variables = loadVariables();
+  console.log("Loaded variables:", variables);
+
   for (let a of srcList) {
     console.log(a);
+    variablesReplace(variables, a);
     replaceDeprecatedContent(a);
     await translateSingleMdToJa(a);
     // break;
