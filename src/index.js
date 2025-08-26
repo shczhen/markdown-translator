@@ -29,7 +29,7 @@ const main = async () => {
     try {
       await translateMDFile(filePath, glossaryMatcher);
     } catch (e) {
-      await gcpTranslator(filePath);
+      // await gcpTranslator(filePath);
       console.error(e);
     }
   }
