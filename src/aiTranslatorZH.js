@@ -65,8 +65,8 @@ const processMetaInfo = (content) => {
   const processedLines = lines.map((line) => {
     if (line.startsWith("summary:")) {
       const summaryValue = line.substring(8).trim();
-      // 如果 summary 值没有被双引号包裹，则添加双引号
-      if (!summaryValue.startsWith('"') || !summaryValue.endsWith('"')) {
+      // 如果 summary 值以反引号开头，则添加双引号包裹
+      if (summaryValue.startsWith("`")) {
         return `summary: "${summaryValue}"`;
       }
     }
