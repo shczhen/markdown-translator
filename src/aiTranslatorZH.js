@@ -48,6 +48,36 @@ const translateWithLangLink = async (content, glossary) => {
 };
 
 /**
+ * 处理 meta 信息，确保 summary 被双引号包裹
+ * @param {string} content - 文件内容
+ * @returns {string} 处理后的内容
+ */
+const processMetaInfo = (content) => {
+  const metaRegex = /^---\n([\s\S]*?)\n---\n/;
+  const match = content.match(metaRegex);
+
+  if (!match) {
+    return content;
+  }
+
+  const metaContent = match[1];
+  const lines = metaContent.split("\n");
+  const processedLines = lines.map((line) => {
+    if (line.startsWith("summary:")) {
+      const summaryValue = line.substring(8).trim();
+      // 如果 summary 值没有被双引号包裹，则添加双引号
+      if (!summaryValue.startsWith('"') || !summaryValue.endsWith('"')) {
+        return `summary: "${summaryValue}"`;
+      }
+    }
+    return line;
+  });
+
+  const processedMetaContent = processedLines.join("\n");
+  return content.replace(metaRegex, `---\n${processedMetaContent}\n---\n`);
+};
+
+/**
  * 翻译Markdown文件
  * @param {string} filePath - 文件路径
  * @param {Function} glossaryMatcher - 词汇表匹配器函数
@@ -81,8 +111,11 @@ export const translateMDFile = async (filePath, glossaryMatcher = null) => {
     // 执行翻译
     const translatedContent = await translateWithLangLink(content, glossary);
 
+    // 处理 meta 信息，确保 summary 被双引号包裹
+    const processedContent = processMetaInfo(translatedContent);
+
     // 写入输出文件
-    writeFileSync(`output/${filePath}`, translatedContent);
+    writeFileSync(`output/${filePath}`, processedContent);
 
     console.log(`翻译完成: ${filePath}`);
   } catch (error) {
