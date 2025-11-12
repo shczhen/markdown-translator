@@ -1,4 +1,3 @@
-import csv from "csvtojson";
 import AhoCorasick from "ahocorasick";
 
 export const createGlossaryMatcher = async (githubUrl) => {
