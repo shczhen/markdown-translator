@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import _ from "lodash";
 import path from "path";
-import glob from "glob";
+import { glob } from "glob";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
